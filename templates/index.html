@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Palette Generator</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8));
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        .color-box {
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .color-text {
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+        }
+        .hexcodes-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        .hexcode-item {
+            display: inline-block;
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .hexcode-item:hover {
+            background-color: #eee;
+        }
+
+    </style>
+    <script>
+        async function generatePalette() {
+            const query = document.getElementById("query").value;
+            const response = await fetch('/palette', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `query=${encodeURIComponent(query)}`
+            });
+            const data = await response.json();
+            displayColors(data.colors);
+        }
+
+        function displayColors(colors) {
+            const container = document.getElementById("color-container");
+            container.innerHTML = '';
+            colors.forEach((color, index) => {
+                const colorBox = document.createElement("div");
+                colorBox.className = "color-box";
+                colorBox.style.backgroundColor = color;
+                colorBox.style.top = `calc(100% / ${colors.length} * ${index})`;
+                colorBox.style.height = `calc(100% / ${colors.length})`;
+                container.appendChild(colorBox);
+            });
+
+            displayHexCodes(colors);
+            const hexcodesContainer = document.getElementById("hexcodes-container");
+            hexcodesContainer.innerHTML = '';
+            colors.forEach((color) => {
+                const hexcodeItem = document.createElement("div");
+                hexcodeItem.className = "hexcode-item";
+                hexcodeItem.textContent = color;
+                hexcodeItem.style.color = color;
+                hexcodeItem.addEventListener("click", () => copyToClipboard(color));
+                hexcodesContainer.appendChild(hexcodeItem);
+            });
+        }
+
+        function displayHexCodes(colors) {
+            const hexcodesContainer = document.getElementById("hexcodes-container");
+            hexcodesContainer.innerHTML = '';
+
+            colors.forEach((color) => {
+                const hexcodeItem = document.createElement("span");
+                hexcodeItem.className = "hexcode-item";
+                hexcodeItem.textContent = color;
+                hexcodeItem.addEventListener("click", () => {
+                    copyToClipboard(color);
+                });
+                hexcodesContainer.appendChild(hexcodeItem);
+            });
+        }
+
+        function copyToClipboard(text) {
+            const el = document.createElement('textarea');
+            el.value = text;
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            document.body.appendChild(el);
+            el.select();
+            el.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            alert(`Copied color: ${text}`);
+        }
+
+</script>
+</head>
+<body>
+    <div id="color-container"></div>
+    <div class="container">
+        <h1>Color Palette Generator</h1>
+        <form onsubmit="event.preventDefault(); generatePalette();">
+            <label for="query">Enter your prompt:</label>
+            <input type="text" id="query" name="query" required>
+            <button type="submit">Generate Palette</button>
+        </form>
+        <div id="hexcodes-container"></div>
+    </div>
+</body>
+</html>
